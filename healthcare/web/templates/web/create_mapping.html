@@ -1,0 +1,125 @@
+{% extends 'web/base.html' %}
+
+{% block content %}
+<h2>Assign Doctor to Patient</h2>
+
+<form id="mappingForm">
+    <label>Patient:</label><br>
+    <select id="patient" required>
+        <option value="">Select Patient</option>
+        <!-- Will be populated dynamically -->
+    </select><br><br>
+    
+    <label>Doctor:</label><br>
+    <select id="doctor" required>
+        <option value="">Select Doctor</option>
+        <!-- Will be populated dynamically -->
+    </select><br><br>
+    
+    <button type="submit">Create Mapping</button>
+</form>
+
+<p id="mappingMessage" style="color: green;"></p>
+
+<script>
+// Fetch patients when the page loads
+async function fetchPatients() {
+    const access_token = localStorage.getItem('access_token');
+    if (!access_token) {
+        alert('Please login first!');
+        return;
+    }
+    
+    const response = await fetch('/api/patients/', {
+        headers: {
+            'Authorization': `Bearer ${access_token}`
+        }
+    });
+    
+    if (response.ok) {
+        const patients = await response.json();
+        const patientSelect = document.getElementById('patient');
+        
+        patients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = patient.name;
+            patientSelect.appendChild(option);
+        });
+    }
+}
+
+// Fetch doctors when the page loads
+async function fetchDoctors() {
+    const access_token = localStorage.getItem('access_token');
+    if (!access_token) {
+        alert('Please login first!');
+        return;
+    }
+    
+    const response = await fetch('/api/doctors/', {
+        headers: {
+            'Authorization': `Bearer ${access_token}`
+        }
+    });
+    
+    if (response.ok) {
+        const doctors = await response.json();
+        const doctorSelect = document.getElementById('doctor');
+        
+        doctors.forEach(doctor => {
+            const option = document.createElement('option');
+            option.value = doctor.id;
+            option.textContent = doctor.name;
+            doctorSelect.appendChild(option);
+        });
+    }
+}
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    fetchPatients();
+    fetchDoctors();
+});
+
+// Handle form submission
+document.getElementById('mappingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const access_token = localStorage.getItem('access_token');
+    if (!access_token) {
+        alert('Please login first!');
+        return;
+    }
+    
+    const patientId = document.getElementById('patient').value;
+    const doctorId = document.getElementById('doctor').value;
+    
+    if (!patientId || !doctorId) {
+        alert('Please select both a patient and a doctor');
+        return;
+    }
+    
+    const response = await fetch('/api/mappings/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${access_token}`
+        },
+        body: JSON.stringify({
+            patient: patientId,
+            doctor: doctorId
+        })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+        document.getElementById('mappingMessage').innerText = 'Doctor assigned to patient successfully!';
+        document.getElementById('mappingForm').reset();
+    } else {
+        document.getElementById('mappingMessage').innerText = JSON.stringify(data);
+    }
+});
+</script>
+{% endblock %}

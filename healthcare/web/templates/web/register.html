@@ -1,0 +1,78 @@
+{% extends 'web/base.html' %}
+
+{% block content %}
+<h2>Register</h2>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<form id="registerForm" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Register</button>
+</form>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const username = formData.get('username');
+    const email = formData.get('email') || ''; // Get email or use empty string if not provided
+    const password1 = formData.get('password1');
+    const password2 = formData.get('password2');
+    
+    if (password1 !== password2) {
+        alert('Passwords do not match!');
+        return;
+    }
+    
+    // Make API call to register user
+    const registerResponse = await fetch('/api/auth/register/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            username: username,
+            email: email,
+            password: password1,
+            password2: password2
+        })
+    });
+    
+    if (registerResponse.ok) {
+        // After successful registration, login to get token
+        const loginResponse = await fetch('/api/auth/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password1
+            })
+        });
+        
+        if (loginResponse.ok) {
+            const data = await loginResponse.json();
+            // Store token in localStorage
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            window.location.href = '/';
+        } else {
+            alert('Registration successful but login failed. Please login manually.');
+            window.location.href = '/login/';
+        }
+    } else {
+        const errorData = await registerResponse.json();
+        alert('Registration failed: ' + JSON.stringify(errorData));
+    }
+});
+</script>
+{% endblock %}

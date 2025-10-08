@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Healthcare App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        nav { margin-bottom: 20px; }
+        a { margin-right: 10px; text-decoration: none; color: blue; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .auth-links { display: none; }
+        .non-auth-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+        <span class="non-auth-links">
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        </span>
+        <span class="auth-links">
+            <a href="{% url 'patients-list' %}">Patients</a>
+            <a href="{% url 'doctors-list' %}">Doctors</a>
+            <a href="{% url 'mappings-list' %}">Mappings</a>
+            <a href="{% url 'create-patient' %}">Add Patient</a>
+            <a href="{% url 'create-doctor' %}">Add Doctor</a>
+            <a href="{% url 'create-mapping' %}">Assign Doctor</a>
+            <a href="#" id="logout-link">Logout</a>
+        </span>
+    </nav>
+    {% block content %}{% endblock %}
+    
+    <script>
+    // Check if user is logged in
+    function updateNavigation() {
+        const token = localStorage.getItem('access_token');
+        const authLinks = document.querySelector('.auth-links');
+        const nonAuthLinks = document.querySelector('.non-auth-links');
+        
+        if (token) {
+            authLinks.style.display = 'inline';
+            nonAuthLinks.style.display = 'none';
+        } else {
+            authLinks.style.display = 'none';
+            nonAuthLinks.style.display = 'inline';
+        }
+    }
+    
+    // Handle logout
+    document.getElementById('logout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        updateNavigation();
+        window.location.href = '/';
+    });
+    
+    // Update navigation on page load
+    document.addEventListener('DOMContentLoaded', updateNavigation);
+    </script>
+</body>
+</html>

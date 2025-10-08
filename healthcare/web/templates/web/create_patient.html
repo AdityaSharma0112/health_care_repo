@@ -1,0 +1,59 @@
+{% extends 'web/base.html' %}
+
+{% block content %}
+<h2>Add New Patient</h2>
+
+<form id="patientForm">
+    <label>Name:</label><br>
+    <input type="text" id="name" required><br><br>
+    <label>Age:</label><br>
+    <input type="number" id="age" required><br><br>
+    <label>Gender:</label><br>
+    <select id="gender" required>
+        <option value="">Select</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+    </select><br><br>
+    <label>Contact:</label><br>
+    <input type="text" id="contact" required><br><br>
+    <button type="submit">Add Patient</button>
+</form>
+
+<p id="patientMessage" style="color: green;"></p>
+
+<script>
+document.getElementById('patientForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const access_token = localStorage.getItem('access_token');
+    if (!access_token) {
+        alert('Please login first!');
+        return;
+    }
+
+    const response = await fetch('/api/patients/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${access_token}`
+        },
+        body: JSON.stringify({
+            name: document.getElementById('name').value,
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+            contact: document.getElementById('contact').value
+        })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        document.getElementById('patientMessage').innerText = 'Patient added successfully!';
+        document.getElementById('patientForm').reset();
+    } else {
+        document.getElementById('patientMessage').innerText = JSON.stringify(data);
+    }
+});
+</script>
+{% endblock %}

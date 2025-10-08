@@ -1,0 +1,51 @@
+{% extends 'web/base.html' %}
+
+{% block content %}
+<h2>Login</h2>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<form id="loginForm" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+</form>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const username = formData.get('username');
+    const password = formData.get('password');
+    
+    // Make API call to get JWT token
+    const response = await fetch('/api/auth/login/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    });
+    
+    if (response.ok) {
+        const data = await response.json();
+        // Store token in localStorage
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        window.location.href = '/';
+    } else {
+        alert('Login failed. Please check your credentials.');
+    }
+});
+</script>
+{% endblock %}
